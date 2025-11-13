@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Notion Overview</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style>
+    body {
+        margin: 0;
+        padding: 20px;
+        font-family: sans-serif;
+        background: transparent;
+        color: var(--fg);
+        --fg: #fff;
+        --bg: #000;
+    }
+    @media (prefers-color-scheme: light) {
+        body { --fg: #000; --bg: #fff; }
+    }
+
+    .box {
+        width: 100%;
+        max-width: 500px;
+        margin: auto;
+        background: var(--bg);
+        padding: 20px;
+        border-radius: 20px;
+        text-align: center;
+        box-shadow: 0 0 40px rgba(0,0,0,0.2);
+    }
+
+    .tabs {
+        display: flex;
+        justify-content: center;
+        margin-bottom: 10px;
+    }
+
+    .tab {
+        padding: 8px 16px;
+        cursor: pointer;
+        border-radius: 12px;
+        margin: 0 4px;
+        background: rgba(255,255,255,0.1);
+    }
+
+    .tab.active {
+        background: rgba(255,255,255,0.3);
+        font-weight: bold;
+    }
+</style>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+
+<body>
+<div class="box">
+    <h2>Overview</h2>
+
+    <div class="tabs">
+        <div class="tab active" id="tab-month">Month</div>
+        <div class="tab" id="tab-year">Year</div>
+    </div>
+
+    <canvas id="chart"></canvas>
+</div>
+
+<script>
+const chartCanvas = document.getElementById("chart");
+let chart;
+
+// Switch tabs
+document.getElementById("tab-month").onclick = () => load("month");
+document.getElementById("tab-year").onclick = () => load("year");
+
+// Simple active state UI
+function activate(tab) {
+    document.getElementById("tab-month").classList.remove("active");
+    document.getElementById("tab-year").classList.remove("active");
+    document.getElementById("tab-" + tab).classList.add("active");
+}
+
+// Fetch data
+async function load(mode) {
+    activate(mode);
+
+    const res = await fetch(`/api/notion?mode=${mode}`);
+    const data = await res.json();
+
+    const labels = Object.keys(data);
+    const values = Object.values(data);
+
+    if (chart) chart.destroy();
+
+    chart = new Chart(chartCanvas, {
+        type: "pie",
+        data: {
+            labels,
+            datasets: [{
+                data: values
+            }]
+        },
+        options: {
+            plugins: {
+                legend: { position: "bottom" }
+            }
+        }
+    });
+}
+
+load("month");
+</script>
+</body>
+</html>
